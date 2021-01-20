@@ -76,7 +76,6 @@ void MainWindow::setDataInListViewThread(QString folderPath, QSize size)
     modelListView->removeRows( 0, modelListView->rowCount() );
 
     modelListView->insertColumn(0);
-    //modelListView->insertRows(0,numRows);
     listPixmaps.clear();
 
     QThread *thread= new QThread;

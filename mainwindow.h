@@ -20,7 +20,6 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void setDataInListView(QString path, QSize size);
     void setDataInListViewThread(QString folderPath, QSize size);
     void wheelEvent(QWheelEvent *event);
 
@@ -31,7 +30,7 @@ private:
     QStandardItemModel *modelListView;
     QSortFilterProxyModel *proxyModel;
 public slots:
-    void update (QPixmap i);
+    void update (QPixmap pixmap);
 
 };
 
