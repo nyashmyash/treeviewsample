@@ -1,7 +1,7 @@
 #include "mainwindow.h"
-#include "worker.h"
 #include <windows.h>
 #include "ui_mainwindow.h"
+#include "worker.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
@@ -21,13 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
     proxyModel	= new QSortFilterProxyModel(this);
     connect(ui->treeView, &QTreeView::clicked,this, [=](const QModelIndex& index)
     {
-        QString path = "";
-        QModelIndex prev = index;
-        while(prev.isValid())
-        {
-            path = prev.data().toString() + "\\" + path;
-            prev = prev.parent();
-        }
+        QString path = treeFilesModel->filePath(index);
+        sendStop();
 
         setDataInListViewThread(path, QSize(200, 200));
     });
@@ -38,7 +33,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->listView->setGridSize(QSize(200, 200));
     ui->listView->setModel(modelListView);
     ui->listView->setEditTriggers(QAbstractItemView::AnyKeyPressed |	QAbstractItemView::DoubleClicked);
-
 }
 void MainWindow::wheelEvent(QWheelEvent *event)
 {
@@ -79,12 +73,19 @@ void MainWindow::setDataInListViewThread(QString folderPath, QSize size)
     listPixmaps.clear();
 
     QThread *thread= new QThread;
-    Worker *my = new Worker(folderPath, size);
+    Worker *worker = new Worker(folderPath, size);
 
-    my->moveToThread(thread);
+    worker->moveToThread(thread);
 
-    connect(my, SIGNAL(send(QPixmap)), this, SLOT(update(QPixmap)));
-    connect(thread, SIGNAL(started()), my, SLOT(doWork()));
+    connect(worker, SIGNAL(send(QPixmap)), this, SLOT(update(QPixmap)));
+    connect(thread, SIGNAL(started()), worker, SLOT(run()));
+    connect(worker, SIGNAL(workFinished()), thread, SLOT(quit()));
+
+    // automatically delete thread and task object when work is done:
+    connect(worker, SIGNAL(workFinished()), worker, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    // Оповещаем поток, что нужно остановиться
+    connect(this, SIGNAL(sendStop()), worker, SLOT(reciveBoolStop()), Qt::DirectConnection);
 
     thread->start();
 }

@@ -1,20 +1,23 @@
 #include "worker.h"
+#include <QImageReader>
 
-Worker::Worker(QString s, QSize size) : path(s), size(size)
+Worker::Worker(QString s, QSize size) : path(s), size(size), terminate(false)
 {
 
 }
 
-void Worker::doWork()
+void Worker::run()
 {
     QStringList thumbnails;
     if(!path.isEmpty())
     {
         QDir dir(path);
         QStringList filter;
-        filter << QLatin1String("*.png");
-        filter << QLatin1String("*.jpeg");
-        filter << QLatin1String("*.jpg");
+        QList<QByteArray> formats = QImageReader::supportedImageFormats();
+        for(int i = 0; i< formats.length(); i++)
+        {
+            filter << "*." + QString(formats[i]);
+        }
         dir.setNameFilters(filter);
         QFileInfoList filelistinfo = dir.entryInfoList();
         foreach (const QFileInfo &fileinfo, filelistinfo)
@@ -31,10 +34,16 @@ void Worker::doWork()
     {
         QPixmap  pixmap( thumbnails.at( i ) );
         pixmap = pixmap.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
+        if (terminate)
+            break;
         if ( !pixmap.isNull() )
         {
            emit send(pixmap);
         }
     }
+}
+
+void Worker::reciveBoolStop()
+{
+    terminate = true;
 }

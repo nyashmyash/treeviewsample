@@ -31,6 +31,8 @@ private:
     QSortFilterProxyModel *proxyModel;
 public slots:
     void update (QPixmap pixmap);
+signals:
+    void sendStop();
 
 };
 

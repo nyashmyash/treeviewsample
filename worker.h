@@ -8,12 +8,15 @@ class Worker:public QObject
 public:
     Worker(QString path, QSize size);
 public slots:
-    void doWork();
+    void run();
+    void reciveBoolStop();
 signals:
+    void workFinished();
     void send(QPixmap);
 private:
     QString path;
     QSize size;
+    bool terminate;
 };
 
 #endif // WORKER_H
